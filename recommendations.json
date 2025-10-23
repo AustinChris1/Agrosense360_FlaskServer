@@ -1,0 +1,279 @@
+{
+    "Corn_(maize)___Cercospora_leaf_spot Gray_leaf_spot": {
+      "overview": "A fungal disease causing small, rectangular, gray-to-brown lesions on leaves, which can merge to cause significant damage.",
+      "treatment": [
+        "Apply fungicides preventatively, especially during favorable conditions.",
+        "Consider using a fungicide with a multi-site mode of action."
+      ],
+      "prevention": [
+        "Plant resistant or tolerant corn hybrids.",
+        "Implement crop rotation with non-host crops for at least two years.",
+        "Bury corn residue to reduce the fungal inoculum."
+      ]
+    },
+    "Corn_(maize)___Common_rust_": {
+      "overview": "A fungal disease characterized by small, cinnamon-brown pustules on leaves that release spores, which turn dark brown to black as the plant matures.",
+      "treatment": [
+        "Fungicide application may be necessary for susceptible hybrids, especially during early stages of infection."
+      ],
+      "prevention": [
+        "Plant rust-resistant corn hybrids.",
+        "Ensure proper plant nutrition to improve overall plant health and resistance."
+      ]
+    },
+    "Corn_(maize)___healthy": {
+      "overview": "A healthy corn plant with no signs of disease or pests.",
+      "treatment": [
+        "No treatment required."
+      ],
+      "prevention": [
+        "Continue with good agricultural practices, including proper irrigation, fertilization, and weed control.",
+        "Regularly scout the field for any signs of new diseases or pests."
+      ]
+    },
+    "Corn_(maize)___Northern_Leaf_Blight": {
+      "overview": "A fungal disease causing long, elliptical, grayish-green lesions on leaves, which can severely reduce photosynthesis.",
+      "treatment": [
+        "Apply fungicides at the first sign of symptoms, focusing on protecting the ear leaf and above.",
+        "Consider multiple applications for prolonged protection."
+      ],
+      "prevention": [
+        "Plant resistant hybrids.",
+        "Rotate crops to a non-host plant to break the disease cycle.",
+        "Till corn residue to reduce overwintering fungi."
+      ]
+    },
+    "Ginger_Bacterial_Wilt": {
+      "overview": "A soil-borne bacterial disease that causes rapid wilting and yellowing of leaves, leading to the collapse of the entire plant.",
+      "treatment": [
+        "There is no effective chemical treatment once the plant is infected.",
+        "Remove and destroy all infected plants and rhizomes immediately.",
+        "Solarize the soil to kill the bacteria."
+      ],
+      "prevention": [
+        "Use disease-free planting material from a reputable source.",
+        "Plant in well-drained soil and avoid over-irrigation.",
+        "Rotate crops and avoid planting in fields with a history of the disease."
+      ]
+    },
+    "Ginger_Healthy": {
+      "overview": "A healthy ginger plant with no signs of disease.",
+      "treatment": [
+        "No treatment required."
+      ],
+      "prevention": [
+        "Ensure proper drainage to prevent waterlogging and root rot.",
+        "Monitor plants regularly for any signs of disease and maintain good soil health."
+      ]
+    },
+    "Pepper,_bell___Bacterial_spot": {
+      "overview": "A bacterial disease causing brown, scab-like spots on leaves and fruit, leading to defoliation and reduced yield.",
+      "treatment": [
+        "Apply copper-based bactericides preventatively to control the spread.",
+        "Use sanitation practices to clean tools and equipment."
+      ],
+      "prevention": [
+        "Use certified, disease-free seeds and transplants.",
+        "Prune plants to improve air circulation and reduce humidity.",
+        "Avoid overhead irrigation, which can splash bacteria from the soil to the leaves."
+      ]
+    },
+    "Pepper,_bell___healthy": {
+      "overview": "A healthy bell pepper plant with no signs of disease.",
+      "treatment": [
+        "No treatment required."
+      ],
+      "prevention": [
+        "Maintain a consistent watering schedule and provide adequate sunlight.",
+        "Regularly inspect plants for pests and diseases to ensure a healthy yield."
+      ]
+    },
+    "Potato___Early_blight": {
+      "overview": "A fungal disease causing small, dark-brown spots with concentric rings (target-like) on lower leaves.",
+      "treatment": [
+        "Apply fungicides preventatively, especially during wet weather.",
+        "Ensure plants are well-nourished to resist stress."
+      ],
+      "prevention": [
+        "Plant resistant potato varieties if available.",
+        "Remove infected leaves to slow the spread.",
+        "Use mulch to prevent soil from splashing onto leaves."
+      ]
+    },
+    "Potato___healthy": {
+      "overview": "A healthy potato plant with no signs of disease.",
+      "treatment": [
+        "No treatment required."
+      ],
+      "prevention": [
+        "Ensure proper spacing between plants for airflow.",
+        "Maintain consistent soil moisture and avoid waterlogging.",
+        "Check for signs of pests or nutrient deficiencies."
+      ]
+    },
+    "Potato___Late_blight": {
+      "overview": "A destructive fungal-like disease that causes water-soaked lesions on leaves and stems, leading to rapid decay.",
+      "treatment": [
+        "Apply fungicides at the first sign of symptoms, and continue applications on a regular schedule.",
+        "Use a combination of different fungicides to prevent resistance."
+      ],
+      "prevention": [
+        "Plant resistant varieties.",
+        "Remove and destroy all infected plant debris after harvest.",
+        "Avoid overhead irrigation and ensure good air circulation."
+      ]
+    },
+    "Tomato___Bacterial_spot": {
+      "overview": "A bacterial disease causing small, dark, water-soaked spots on leaves that can lead to leaf drop and scabbing on fruit.",
+      "treatment": [
+        "Apply copper-based sprays preventatively, especially during warm, humid conditions.",
+        "Prune lower leaves to improve air circulation."
+      ],
+      "prevention": [
+        "Use certified, disease-free seeds and transplants.",
+        "Avoid overhead watering to prevent splashing bacteria."
+      ]
+    },
+    "Tomato___Early_blight": {
+      "overview": "A common fungal disease that causes brown spots with concentric rings on lower leaves.",
+      "treatment": [
+        "Remove and destroy infected leaves and plant debris.",
+        "Apply fungicides containing chlorothalonil or copper."
+      ],
+      "prevention": [
+        "Ensure good plant spacing for air circulation.",
+        "Mulch to reduce soil splash that spreads the fungus."
+      ]
+    },
+    "Tomato___healthy": {
+      "overview": "A healthy tomato plant with no signs of disease.",
+      "treatment": [
+        "No treatment required."
+      ],
+      "prevention": [
+        "Provide adequate water and nutrients.",
+        "Support plants with stakes or cages to improve air circulation.",
+        "Monitor regularly for signs of pests or disease."
+      ]
+    },
+    "Tomato___Late_blight": {
+      "overview": "A highly destructive disease that causes large, irregular, dark-brown lesions on leaves, stems, and fruit, leading to rapid plant death.",
+      "treatment": [
+        "Apply fungicides containing mancozeb or chlorothalonil at the first sign of disease.",
+        "Remove and destroy infected plants immediately to prevent spread."
+      ],
+      "prevention": [
+        "Plant resistant varieties if available.",
+        "Avoid planting tomatoes near potatoes, as they can share the disease.",
+        "Prune lower branches to prevent soil splash."
+      ]
+    },
+    "Tomato___Leaf_Mold": {
+      "overview": "A fungal disease that first appears as light green or yellow spots on the upper leaf surface, with olive-green or brown velvety patches on the lower surface.",
+      "treatment": [
+        "Apply fungicides if necessary, ensuring good coverage on the undersides of leaves.",
+        "Improve air circulation around plants by pruning."
+      ],
+      "prevention": [
+        "Increase plant spacing to promote air flow.",
+        "Reduce humidity in greenhouses by using fans or vents."
+      ]
+    },
+    "Tomato___Septoria_leaf_spot": {
+      "overview": "A fungal disease causing small, circular spots with dark brown margins and a tan center on leaves, often leading to defoliation.",
+      "treatment": [
+        "Remove and destroy infected leaves.",
+        "Apply fungicides preventatively, especially during wet periods."
+      ],
+      "prevention": [
+        "Mulch plants to prevent soil from splashing onto leaves.",
+        "Avoid overhead watering."
+      ]
+    },
+    "Tomato___Spider_mites Two-spotted_spider_mite": {
+      "overview": "Tiny pests that feed on plant sap, causing stippling (tiny yellow or white spots) on the leaves, and can create fine webbing.",
+      "treatment": [
+        "Spray plants with a strong stream of water to dislodge mites.",
+        "Use insecticidal soaps or neem oil as a control measure."
+      ],
+      "prevention": [
+        "Introduce predatory mites as a biological control.",
+        "Keep plants well-watered to reduce stress, as mites thrive on stressed plants."
+      ]
+    },
+    "Tomato___Target_Spot": {
+      "overview": "A fungal disease that creates small, dark, circular spots on leaves, which may have a yellow halo and can develop into target-like lesions.",
+      "treatment": [
+        "Remove infected leaves and plant debris from the ground.",
+        "Apply fungicides with active ingredients like azoxystrobin."
+      ],
+      "prevention": [
+        "Ensure proper air circulation to keep foliage dry.",
+        "Avoid overhead irrigation, especially in the evening."
+      ]
+    },
+    "Tomato___Tomato_mosaic_virus": {
+      "overview": "A viral disease causing mottled, mosaic-like patterns on leaves, stunting of the plant, and deformed fruit.",
+      "treatment": [
+        "There is no chemical cure for viral diseases.",
+        "Remove and destroy all infected plants to prevent the virus from spreading."
+      ],
+      "prevention": [
+        "Wash hands and sterilize tools after handling infected plants.",
+        "Use virus-resistant varieties if available."
+      ]
+    },
+    "Tomato___Tomato_Yellow_Leaf_Curl_Virus": {
+      "overview": "A viral disease transmitted by whiteflies, causing leaves to curl upwards and become stunted, and flowers to drop, leading to no fruit production.",
+      "treatment": [
+        "There is no cure for this virus.",
+        "Remove and destroy infected plants immediately to prevent the spread to other plants."
+      ],
+      "prevention": [
+        "Control whitefly populations, which are the primary vector, using insecticides or reflective mulches.",
+        "Plant in areas where the virus is not prevalent."
+      ]
+    },
+    "Unknown": {
+      "overview": "The image is unclear or the plant is healthy. No specific disease has been detected.",
+      "treatment": [
+        "No specific treatment recommended. If symptoms persist, a clearer image may be needed."
+      ],
+      "prevention": [
+        "Continue monitoring the plant for any changes in health."
+      ]
+    },
+    "Yam_Anthracnose": {
+      "overview": "A fungal disease causing dark spots or lesions on leaves, stems, and tubers, which can lead to vine dieback and reduced yield.",
+      "treatment": [
+        "Apply fungicides containing copper or mancozeb as a preventative measure during periods of high humidity.",
+        "Prune and destroy infected plant parts."
+      ],
+      "prevention": [
+        "Use disease-free planting material from a trusted source.",
+        "Ensure proper field sanitation to remove crop residue."
+      ]
+    },
+    "Yam_Leaf_spot": {
+      "overview": "A fungal disease causing small, circular spots on yam leaves, which can merge and cause defoliation.",
+      "treatment": [
+        "Apply fungicides to protect new growth.",
+        "Remove and destroy heavily infected leaves to reduce disease spread."
+      ],
+      "prevention": [
+        "Rotate crops with non-yam species to break the disease cycle.",
+        "Maintain good air circulation through proper plant spacing."
+      ]
+    },
+    "Yam_Mosaic_Virus": {
+      "overview": "A viral disease causing mosaic patterns (light and dark green areas) on leaves, leaf distortion, and stunted plant growth.",
+      "treatment": [
+        "There is no cure for viral diseases.",
+        "Remove and destroy infected plants promptly."
+      ],
+      "prevention": [
+        "Use only certified, virus-free planting material.",
+        "Control insect vectors like aphids and mealybugs with insecticides."
+      ]
+    }
+  }

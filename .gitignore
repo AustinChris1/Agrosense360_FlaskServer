@@ -1,0 +1,11 @@
+.env
+.venv
+venv
+pycache
+*.pyc
+*.swp
+.vscode
+*.log
+.git
+best_agrosense_model.h5
+firebase_service_account.json

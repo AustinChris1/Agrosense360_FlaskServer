@@ -1,0 +1,10 @@
+Flask
+gunicorn
+tensorflow
+firebase-admin
+requests
+numpy
+Pillow
+opencv-python
+flask-cors
+googletrans
