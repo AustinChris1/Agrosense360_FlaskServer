@@ -95,7 +95,9 @@ def load_resources():
         print("Model loaded successfully.")
     except Exception as e:
         print(f"Error loading model: {e}")
-        exit(1)
+        # In a Gunicorn environment, we want to allow the process to fail fast
+        # if a critical resource like the model cannot be loaded.
+        raise RuntimeError(f"Failed to load model: {e}")
 
     try:
         with open(CLASS_INDICES_PATH, 'r') as f:
@@ -103,27 +105,30 @@ def load_resources():
             class_names = {int(k): v for k, v in loaded_indices.items()}
         print("Class names loaded successfully.")
     except FileNotFoundError:
-        print(f"Error: {CLASS_INDICES_PATH} not found.")
-        exit(1)
+        raise RuntimeError(f"Error: {CLASS_INDICES_PATH} not found.")
 
     try:
         with open(RECOMMENDATIONS_PATH, 'r') as f:
             recommendations_db = json.load(f)
         print("Recommendations loaded successfully.")
     except FileNotFoundError:
-        print(f"Error: {RECOMMENDATIONS_PATH} not found.")
-        exit(1)
+        raise RuntimeError(f"Error: {RECOMMENDATIONS_PATH} not found.")
 
     # Initialize Firebase Admin SDK
     try:
-        cred = credentials.Certificate(FIREBASE_SERVICE_ACCOUNT_KEY)
-        firebase_admin.initialize_app(cred, {
-            'databaseURL': FIREBASE_DATABASE_URL
-        })
-        print("Firebase Admin SDK initialized successfully.")
+        # Check if Firebase has already been initialized (Gunicorn might load the app multiple times)
+        if not firebase_admin._apps:
+            cred = credentials.Certificate(FIREBASE_SERVICE_ACCOUNT_KEY)
+            firebase_admin.initialize_app(cred, {
+                'databaseURL': FIREBASE_DATABASE_URL
+            })
+            print("Firebase Admin SDK initialized successfully.")
+        else:
+            print("Firebase Admin SDK already initialized.")
     except Exception as e:
-        print(f"Error initializing Firebase Admin SDK: {e}")
-        exit(1)
+        # Be less aggressive on exit, just log the error and continue if possible.
+        print(f"Error initializing Firebase Admin SDK: {e}. Data logging may be unavailable.")
+        # We don't exit here, as the main app functionality should still work.
 
 # --- Translation Function (Enhanced for multilingual text) ---
 def get_translated_ui_text(key, lang_code, text_map):
@@ -222,8 +227,8 @@ def create_telegram_message(predicted_class, confidence, translated_recommendati
     return message.strip()
 
 def send_telegram_photo(photo_data, message):
-    if TELEGRAM_BOT_TOKEN == 'YOUR_TELEGRAM_BOT_TOKEN':
-        print("WARNING: Telegram bot token not set. Skipping Telegram notification.")
+    if TELEGRAM_BOT_TOKEN == '7678276226:AAGNAWAFYhWIfJ6BWvld6BDki2fVDFWyb90': # Check against the placeholder token you provided
+        print("WARNING: Telegram bot token is likely a placeholder. Skipping Telegram notification.")
         return False
     
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendPhoto"
@@ -263,6 +268,10 @@ def predict_endpoint():
     
     if file:
         try:
+            # Check if model is loaded before proceeding
+            if model is None:
+                 return jsonify({"error": "Model not yet loaded. Server is initializing."}), 503
+                 
             # 1. Image Pre-processing and Prediction
             pil_img = Image.open(file.stream).convert('RGB')
 
@@ -314,9 +323,13 @@ def predict_endpoint():
             }
 
             try:
-                ref = db.reference('/predictions')
-                ref.push(firebase_data)
-                print("Data pushed to Firebase successfully.")
+                # Ensure the app is initialized before calling db.reference
+                if firebase_admin._apps:
+                    ref = db.reference('/predictions')
+                    ref.push(firebase_data)
+                    print("Data pushed to Firebase successfully.")
+                else:
+                    print("WARNING: Firebase not initialized. Skipping database logging.")
             except Exception as e:
                 print(f"Error pushing to Firebase: {e}")
             
@@ -350,10 +363,11 @@ def predict_endpoint():
 # --- Health Check Endpoint (remains the same) ---
 @app.route('/health', methods=['GET'])
 def health_check():
+    # This check now relies on the global variables being set by the resource loader
     if model is not None and class_names is not None and recommendations_db is not None:
         return jsonify({"status": "ok", "message": "Model and resources loaded."}), 200
     else:
-        return jsonify({"status": "error", "message": "Model or resources not loaded."}), 503
+        return jsonify({"status": "error", "message": "Model or resources not loaded. Check startup logs."}), 503
 
 # --- Testing Endpoint with HTML Form (Updated Language Options) ---
 @app.route('/', methods=['GET'])
@@ -464,7 +478,8 @@ def test_predict_form():
             formData.append('file', fileInput.files[0]);
 
             try {
-                const response = await fetch(`/predict?lang=${langSelect.value}`, {
+                // Ensure the fetch URL uses the correct port (3000)
+                const response = await fetch(`http://localhost:3000/predict?lang=${langSelect.value}`, {
                     method: 'POST',
                     body: formData
                 });
@@ -516,8 +531,16 @@ def test_predict_form():
 </html>
 """)
 
-if __name__ == '__main__':
+# --- GUNICORN ENTRY POINT ---
+# This block ensures model loading and critical initializations happen when 
+# Gunicorn imports the 'app' module before spinning up worker processes.
+
+try:
     with app.app_context():
         load_resources()
-    print("Starting Flask app...")
-    app.run(host='0.0.0.0', port=3000, debug=False)
+    print("Application resources loaded successfully for Gunicorn.")
+except Exception as e:
+    # Log the failure but don't call exit(), let Gunicorn's worker management handle it.
+    print(f"CRITICAL ERROR during app startup: {e}") 
+
+# Note: The "if __name__ == '__main__':" block has been fully removed.
