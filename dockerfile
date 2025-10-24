@@ -4,13 +4,11 @@ FROM python:3.11-slim
 # Set the working directory inside the container
 WORKDIR /app
 
-# 1. DEFINE THE BUILD ARGUMENT for the Google Drive ID
-ARG MODEL_DRIVE_ID="1xkvaONSV_Y5i4uts6qWYxesaf5LAH7Ll"
+# The MODEL_DRIVE_ID ARG is removed. The model must be present locally.
 
-# Install necessary system dependencies (including wget for model download)
+# Install necessary system dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    wget \
     libgl1 \
     libgomp1 \
     libsm6 \
@@ -23,18 +21,20 @@ RUN apt-get update && \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 2. DOWNLOAD THE MODEL FILE
-RUN echo "Downloading model..." && \
-    wget --no-check-certificate \
-    "https://docs.google.com/uc?export=download&id=${MODEL_DRIVE_ID}" \
-    -O "best_agrosense_model.h5" && \
-    echo "Model download complete."
+# CRITICAL: COPY THE MODEL FILE (It must be in your Git repository and local directory)
+COPY best_agrosense_model.h5 .
 
-# Copy the rest of the application code, excluding the model file (assuming you have a good .dockerignore)
+# Copy the rest of the application code
 COPY . .
+
+# to prevent OOM Kill during model loading.
+ENV TF_ENABLE_ONEDNN_OPTS=0
+ENV OMP_NUM_THREADS=1
+ENV KMP_BLOCKTIME=0
+ENV KMP_SETTINGS=1
 
 # Flask applications typically run on port 3000
 EXPOSE 3000
 
-# Command to run the application using Gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:3000", "app:app"]
+# GUNICORN CONFIG: Workers=1, Timeout=300s. 
+CMD ["gunicorn", "--bind", "0.0.0.0:3000", "--workers", "1", "--timeout", "300", "app:app"]
