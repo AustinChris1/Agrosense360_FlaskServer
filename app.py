@@ -479,7 +479,7 @@ def test_predict_form():
 
             try {
                 // Ensure the fetch URL uses the correct port (3000)
-                const response = await fetch(`http://localhost:3000/predict?lang=${langSelect.value}`, {
+                const response = await fetch(`/predict?lang=${langSelect.value}`, {
                     method: 'POST',
                     body: formData
                 });
