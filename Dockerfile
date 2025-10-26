@@ -34,6 +34,6 @@ ENV KMP_BLOCKTIME=0
 ENV KMP_SETTINGS=1
 
 # Cloud Run is configured to use port 8000, so we must expose this port.
-EXPOSE 8000
+EXPOSE 3000
 
-CMD ["flask", "run", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["flask", "run", "--host", "0.0.0.0", "--port", "3000"]
