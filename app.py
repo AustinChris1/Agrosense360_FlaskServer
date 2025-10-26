@@ -87,6 +87,11 @@ def load_resources():
     global model, class_names, recommendations_db
     print("Loading model and resources...")
     try:
+        if not os.path.exists(MODEL_PATH):
+            raise FileNotFoundError(f"Model file not found at: {os.path.abspath(MODEL_PATH)}")
+            
+        model_size_bytes = os.path.getsize(MODEL_PATH)
+        print(f"Model file found. Size: {model_size_bytes / (1024*1024):.2f} MB")
         model = load_model(MODEL_PATH, custom_objects={
             'F1Score': F1Score,
             'swish': tf.keras.activations.swish,
@@ -95,8 +100,6 @@ def load_resources():
         print("Model loaded successfully.")
     except Exception as e:
         print(f"Error loading model: {e}")
-        # In a Gunicorn environment, we want to allow the process to fail fast
-        # if a critical resource like the model cannot be loaded.
         raise RuntimeError(f"Failed to load model: {e}")
 
     try:
