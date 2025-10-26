@@ -532,13 +532,11 @@ def test_predict_form():
 """)
 
 # --- GUNICORN ENTRY POINT ---
-# This block ensures model loading and critical initializations happen when 
-# Gunicorn imports the 'app' module before spinning up worker processes.
-
 try:
     with app.app_context():
         load_resources()
     print("Application resources loaded successfully for Gunicorn.")
+# ... (rest of the block)
 except Exception as e:
     # Log the failure but don't call exit(), let Gunicorn's worker management handle it.
     print(f"CRITICAL ERROR during app startup: {e}") 
