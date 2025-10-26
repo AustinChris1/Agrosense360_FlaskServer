@@ -9,7 +9,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certifi
     libsm6 \
     libxext6 \
     curl \
-    libglib2.0-0 && \
+    libglib2.0-0 
+    ffmpeg \
+    libsm6 \
+    libxext6 -y && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -30,4 +33,4 @@ RUN uv sync --locked
 # ENV KMP_BLOCKTIME=0
 # ENV KMP_SETTINGS=1
 
-CMD ["uv", "run", "gunicorn", "--bind", "0.0.0.0:$PORT", "--workers", "1", "--timeout", "300", "wsgi:app"]
+CMD ["./scripts/entrypoint.sh"]

@@ -1,3 +1,4 @@
+import os
 
 # --- Firebase & Telegram Config ---
 # IMPORTANT: Replace with your actual Firebase and Telegram details
@@ -7,9 +8,11 @@ TELEGRAM_BOT_TOKEN = '7678276226:AAGNAWAFYhWIfJ6BWvld6BDki2fVDFWyb90'
 TELEGRAM_CHAT_ID = '1206974757'
 
 # --- Configuration ---
-MODEL_PATH = 'best_agrosense_model.h5'
-CLASS_INDICES_PATH = 'class_indices.json'
-RECOMMENDATIONS_PATH = 'recommendations.json' 
+BASE_PATH = os.path.join(os.getcwd(), 'agrosense360')
+MODEL_PATH = os.path.join(BASE_PATH, 'models', 'model.h5')
+print(MODEL_PATH)
+CLASS_INDICES_PATH = os.path.join(BASE_PATH, 'assets', 'class_indices.json')
+RECOMMENDATIONS_PATH = os.path.join(BASE_PATH, 'assets', 'recommendations.json')
 IMG_HEIGHT = 224
 IMG_WIDTH = 224
 
