@@ -20,7 +20,6 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # CRITICAL: COPY THE MODEL AND ASSET FILES
-# These assets are non-sensitive and required for the application logic.
 COPY best_agrosense_model.h5 .
 COPY class_indices.json .
 COPY recommendations.json .
@@ -34,8 +33,8 @@ ENV OMP_NUM_THREADS=1
 ENV KMP_BLOCKTIME=0
 ENV KMP_SETTINGS=1
 
-# Flask applications typically run on port 3000
-EXPOSE 3000
+# Expose the default Cloud Run port, though the CMD uses $PORT
+EXPOSE 8080 
 
-# GUNICORN CONFIG: Workers=1, Timeout=300s.
-CMD ["gunicorn", "--bind", "0.0.0.0:3000", "--workers", "1", "--timeout", "300", "app:app"]
+# Cloud Run injects PORT=8080 (by default). The Gunicorn bind command needs this variable.
+CMD ["gunicorn", "--bind", "0.0.0.0:${PORT}", "--workers", "1", "--threads", "1", "--timeout", "300", "app:app"]
