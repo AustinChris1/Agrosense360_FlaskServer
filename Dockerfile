@@ -37,4 +37,4 @@ ENV KMP_SETTINGS=1
 EXPOSE 3000
 
 # GUNICORN CONFIG: Workers=1, Timeout=300s. 
-CMD ["gunicorn", "--bind", "0.0.0.0:3000", "--workers", "1", "--timeout", "300", "app:app"]
+CMD ["flask", "run", "--host", "0.0.0.0", "--port", "3000," "--workers", "1", "--timeout", "300", "app:app"]
