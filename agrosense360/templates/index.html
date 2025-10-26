@@ -1,0 +1,157 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plant Disease Predictor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">Plant Disease Predictor</h1>
+        
+        <form id="uploadForm" class="space-y-6">
+            <div>
+                <label for="imageUpload" class="block text-sm font-medium text-gray-700 mb-2">Upload Image</label>
+                <input type="file" id="imageUpload" name="file" accept="image/*" class="block w-full text-sm text-gray-500
+                    file:mr-4 file:py-2 file:px-4
+                    file:rounded-full file:border-0
+                    file:text-sm file:font-semibold
+                    file:bg-green-50 file:text-green-700
+                    hover:file:bg-green-100 cursor-pointer" required>
+            </div>
+            
+            <div class="mt-4">
+                <label for="languageSelect" class="block text-sm font-medium text-gray-700 mb-2">Select Language</label>
+                <select id="languageSelect" name="lang" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
+                    <option value="en">English</option>
+                    <option value="ig">Igbo (Nigeria)</option>
+                    <option value="yo">Yoruba (Nigeria)</option>
+                    <option value="ha">Hausa (Nigeria)</option>
+                    <option value="sw">Swahili</option>
+                    <option value="fr">French</option>
+                    <option value="es">Spanish</option>
+                    <option value="de">German</option>
+                </select>
+            </div>
+            
+            <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150 ease-in-out">
+                Predict Disease
+            </button>
+        </form>
+
+        <div id="loadingIndicator" class="mt-6 text-center text-green-600 font-medium hidden">
+            Processing image...
+        </div>
+
+        <div id="result" class="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200 hidden">
+            <h2 class="text-lg font-semibold text-gray-800 mb-2">Prediction Result:</h2>
+            <p class="text-gray-700"><strong>Class:</strong> <span id="predictedClass" class="font-bold"></span></p>
+            <p class="text-gray-700"><strong>Confidence:</strong> <span id="confidence" class="font-bold"></span></p>
+            <p id="message" class="text-gray-600 text-sm mt-2"></p>
+            
+            <div id="recommendations-section" class="mt-4">
+                <h3 class="text-md font-semibold text-gray-800">Recommendations:</h3>
+                <h4 class="font-medium mt-2">Overview:</h4>
+                <p id="overview-text" class="text-gray-600"></p>
+                
+                <h4 class="font-medium mt-2">Treatment:</h4>
+                <ul id="treatment-list" class="list-disc list-inside text-gray-600 pl-4"></ul>
+                
+                <h4 class="font-medium mt-2">Prevention:</h4>
+                <ul id="prevention-list" class="list-disc list-inside text-gray-600 pl-4"></ul>
+            </div>
+        </div>
+
+        <div id="error" class="mt-6 p-4 bg-red-50 rounded-lg border border-red-200 text-red-700 hidden">
+            <h2 class="text-lg font-semibold mb-2">Error:</h2>
+            <p id="errorMessage"></p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const resultDiv = document.getElementById('result');
+            const errorDiv = document.getElementById('error');
+            const errorMessageSpan = document.getElementById('errorMessage');
+            const messageSpan = document.getElementById('message');
+            const fileInput = document.getElementById('imageUpload');
+            const langSelect = document.getElementById('languageSelect');
+            
+            resultDiv.classList.add('hidden');
+            errorDiv.classList.add('hidden');
+            messageSpan.textContent = '';
+            loadingIndicator.classList.remove('hidden');
+
+            if (fileInput.files.length === 0) {
+                loadingIndicator.classList.add('hidden');
+                errorMessageSpan.textContent = "Please select an image file.";
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                // Ensure the fetch URL uses the correct port (3000)
+                const response = await fetch(`/predict?lang=${langSelect.value}`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                loadingIndicator.classList.add('hidden');
+
+                if (response.ok) {
+                    document.getElementById('predictedClass').textContent = data.predicted_class;
+                    document.getElementById('confidence').textContent = (data.confidence * 100).toFixed(2) + '%';
+                    
+                    const overviewText = document.getElementById('overview-text');
+                    const treatmentList = document.getElementById('treatment-list');
+                    const preventionList = document.getElementById('prevention-list');
+
+                    overviewText.textContent = data.recommendations.overview;
+                    treatmentList.innerHTML = '';
+                    data.recommendations.treatment.forEach(item => {
+                        const li = document.createElement('li');
+                        li.textContent = item;
+                        treatmentList.appendChild(li);
+                    });
+                    
+                    preventionList.innerHTML = '';
+                    data.recommendations.prevention.forEach(item => {
+                        const li = document.createElement('li');
+                        li.textContent = item;
+                        preventionList.appendChild(li);
+                    });
+
+                    if (data.message) {
+                        messageSpan.textContent = data.message;
+                    }
+
+                    resultDiv.classList.remove('hidden');
+                } else {
+                    errorMessageSpan.textContent = data.error || 'Unknown error occurred.';
+                    errorDiv.classList.remove('hidden');
+                }
+            } catch (err) {
+                loadingIndicator.classList.add('hidden');
+                errorMessageSpan.textContent = 'Network error or server unreachable: ' + err.message;
+                errorDiv.classList.remove('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

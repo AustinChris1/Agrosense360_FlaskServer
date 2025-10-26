@@ -1,0 +1,18 @@
+[project]
+name = "agrosense360-flaskserver"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "Flask",
+    "gunicorn",
+    "tensorflow",
+    "firebase-admin",
+    "requests",
+    "numpy",
+    "Pillow",
+    "opencv-python",
+    "flask-cors",
+    "googletrans"
+]
