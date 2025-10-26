@@ -13,14 +13,15 @@ import firebase_admin
 from firebase_admin import credentials, db
 from googletrans import Translator 
 from io import BytesIO 
-from dotenv import load_dotenv
+# from dotenv import load_dotenv # <-- REMOVED: Rely on Cloud Run environment variables
 
 app = Flask(__name__)
 CORS(app) 
-load_dotenv()
+# load_dotenv() # <-- REMOVED: .env files are not used in Cloud Run production
+
 # --- Firebase & Telegram Config ---
 FIREBASE_KEY_ENV_VAR = 'FIREBASE_KEY_JSON'
-# --- CORRECT: Read variables from the environment (loaded by load_dotenv()) ---
+# --- CORRECT: Read variables from the environment injected by Cloud Run ---
 FIREBASE_DATABASE_URL = os.environ.get('FIREBASE_DATABASE_URL')
 TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN')
 TELEGRAM_CHAT_ID = os.environ.get('TELEGRAM_CHAT_ID')
@@ -104,14 +105,16 @@ def load_resources():
                     service_account_info = json.loads(firebase_key_json_str)
                 except json.JSONDecodeError as e:
                     print(f"CRITICAL ERROR: Failed to parse Firebase service account JSON: {e}")
-                    return
-
-                # Initialize with the dictionary object
-                cred = credentials.Certificate(service_account_info)
-                firebase_admin.initialize_app(cred, {
-                    'databaseURL': FIREBASE_DATABASE_URL
-                })
-                print("Firebase Admin SDK initialized successfully.")
+                    # If JSON parsing fails, the app cannot initialize Firebase, but should still load the ML model
+                    pass # Do not return/crash here
+                
+                if 'service_account_info' in locals():
+                    # Initialize with the dictionary object
+                    cred = credentials.Certificate(service_account_info)
+                    firebase_admin.initialize_app(cred, {
+                        'databaseURL': FIREBASE_DATABASE_URL
+                    })
+                    print("Firebase Admin SDK initialized successfully.")
         else:
             print("Firebase Admin SDK already initialized.")
     except Exception as e:
@@ -125,6 +128,9 @@ def load_resources():
             
         model_size_bytes = os.path.getsize(MODEL_PATH)
         print(f"Model file found. Size: {model_size_bytes / (1024*1024):.2f} MB")
+        
+        # Increase the verbosity of the print statement to show the long operation is starting
+        print("Starting TensorFlow model load...") 
         model = load_model(MODEL_PATH, custom_objects={
             'F1Score': F1Score,
             'swish': tf.keras.activations.swish,
@@ -153,7 +159,6 @@ def load_resources():
     except FileNotFoundError:
         raise RuntimeError(f"Error: {RECOMMENDATIONS_PATH} not found.")
 
-    # --- REMOVED: Redundant and incorrect second Firebase initialization block ---
 
 # --- Translation Function (Enhanced for multilingual text) ---
 def get_translated_ui_text(key, lang_code, text_map):
@@ -252,7 +257,7 @@ def create_telegram_message(predicted_class, confidence, translated_recommendati
     return message.strip()
 
 def send_telegram_photo(photo_data, message):
-    # --- CORRECTED: Use the global variables which are now read from .env ---
+    # --- CORRECTED: Use the global variables which are now read from the environment ---
     if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID: 
         print("WARNING: Telegram bot token or chat ID is missing. Skipping Telegram notification.")
         return False
@@ -535,6 +540,7 @@ def test_predict_form():
                         const li = document.createElement('li');
                         li.textContent = item;
                         preventionList.appendChild(li);
+                        
                     });
 
                     if (data.message) {
@@ -558,11 +564,14 @@ def test_predict_form():
 """)
 
 # --- GUNICORN ENTRY POINT ---
+# This block runs when Gunicorn starts the application process.
 try:
     with app.app_context():
         load_resources()
     print("Application resources loaded successfully for Gunicorn.")
-# ... (rest of the block)
 except Exception as e:
-    # Log the failure but don't call exit(), let Gunicorn's worker management handle it.
+    # the application process will crash here, causing Gunicorn to report a startup failure.
     print(f"CRITICAL ERROR during app startup: {e}")
+    # Re-raise the exception to terminate the worker process.
+    # Cloud Run will retry based on its configuration.
+    raise

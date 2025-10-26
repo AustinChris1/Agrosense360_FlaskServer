@@ -23,11 +23,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY best_agrosense_model.h5 .
 COPY class_indices.json .
 COPY recommendations.json .
-
-# Copy the rest of the application code
 COPY . .
 
-# to prevent OOM Kill during model loading.
+# Recommended TensorFlow environment variables for stability on limited resources
 ENV TF_ENABLE_ONEDNN_OPTS=0
 ENV OMP_NUM_THREADS=1
 ENV KMP_BLOCKTIME=0
@@ -36,5 +34,4 @@ ENV KMP_SETTINGS=1
 # Expose the default Cloud Run port, though the CMD uses $PORT
 EXPOSE 8080 
 
-# Cloud Run injects PORT=8080 (by default). The Gunicorn bind command needs this variable.
-CMD ["gunicorn", "--bind", "0.0.0.0:${PORT}", "--workers", "1", "--threads", "1", "--timeout", "300", "app:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:${PORT}", "--workers", "1", "--threads", "4", "--timeout", "600", "app:app"]
