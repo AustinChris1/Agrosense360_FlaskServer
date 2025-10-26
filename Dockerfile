@@ -4,8 +4,6 @@ FROM python:3.11-slim
 # Set the working directory inside the container
 WORKDIR /app
 
-# The MODEL_DRIVE_ID ARG is removed. The model must be present locally.
-
 # Install necessary system dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -21,10 +19,12 @@ RUN apt-get update && \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# CRITICAL: COPY THE MODEL FILE (It must be in your Git repository and local directory)
 COPY best_agrosense_model.h5 .
+COPY class_indices.json .
+COPY recommendations.json .
+COPY firebase_service_account.json .
 
-# Copy the rest of the application code
+# Copy the rest of the application code (app.py)
 COPY . .
 
 # to prevent OOM Kill during model loading.
@@ -33,8 +33,7 @@ ENV OMP_NUM_THREADS=1
 ENV KMP_BLOCKTIME=0
 ENV KMP_SETTINGS=1
 
-# Flask applications typically run on port 3000
-EXPOSE 3000
+# Cloud Run is configured to use port 8000, so we must expose this port.
+EXPOSE 8000
 
-# GUNICORN CONFIG: Workers=1, Timeout=300s. 
-CMD ["flask", "run", "--host", "0.0.0.0", "--port", "3000," "--workers", "1", "--timeout", "300", "app:app"]
+CMD ["flask", "run", "--host", "0.0.0.0", "--port", "8000"]
