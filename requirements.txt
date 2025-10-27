@@ -16,4 +16,4 @@ googletrans==4.0.0rc1
 requests>=2.31.0
 
 # --- Optional: Performance / safety ---
-protobuf<5.0.0
+protobuf<5.28.0
