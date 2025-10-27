@@ -69,10 +69,12 @@ RUN if [ -f "app.py" ]; then \
         exit 1; \
     fi
 
-# Expose the default Cloud Run port
-EXPOSE 3000 
-
+# ✅ Set environment variable Cloud Run expects
 ENV FLASK_APP=app.py
+ENV PORT=8080
 
-# Run the Flask server directly (simpler and works well with Cloud Run)
+# Expose the port Cloud Run will use
+EXPOSE 8080
+
+# ✅ Use the dynamic Cloud Run port
 CMD ["sh", "-c", "flask run --host=0.0.0.0 --port=$PORT"]
