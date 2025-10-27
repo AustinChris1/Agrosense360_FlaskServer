@@ -285,6 +285,7 @@ def send_telegram_photo(photo_data, message):
         return False
 
 # --- Main Prediction Endpoint ---
+# app.py, starting around line 298
 @app.route('/predict', methods=['POST'])
 def predict_endpoint():
     if 'file' not in request.files:
@@ -304,20 +305,43 @@ def predict_endpoint():
                 return jsonify({"error": "Model not yet loaded. Server is initializing."}), 503
                 
             # 1. Image Pre-processing and Prediction
-            pil_img = Image.open(file.stream).convert('RGB')
-
-            if is_low_quality_image(pil_img):
+            
+            # Open image as RGB for pre-checks (leaf detection, quality)
+            # The file stream must be reset or reopened if used multiple times. 
+            # We use file.stream (BytesIO object) which can be passed directly to Image.open
+            file_stream_position = file.stream.tell() # Save current position
+            
+            # --- Image 1 (RGB for pre-checks) ---
+            file.stream.seek(0) # Go to start of stream
+            original_pil_img = Image.open(file.stream).convert('RGB')
+            
+            if is_low_quality_image(original_pil_img):
                 return jsonify({"error": "Image quality is too low (e.g., too dark, too uniform). Please upload a clearer image."}), 400
             
-            if not is_leaf_detected(pil_img):
+            if not is_leaf_detected(original_pil_img):
                 return jsonify({"error": "No significant plant leaf detected in the image. Please upload an image of a plant leaf."}), 400
 
-            img_resized = pil_img.resize((IMG_WIDTH, IMG_HEIGHT))
+            # --- Image 2 (Grayscale for model input) ---
+            # Reset stream position again for the Telegram photo/prediction input if needed, 
+            # but in this flow, original_pil_img is used for the Telegram photo later.
+            
+            # Convert to Grayscale ('L'/1-channel) for the model's expected input shape (3, 3, 1, 32)
+            pil_img_1ch = original_pil_img.convert('L')
+            
+            img_resized = pil_img_1ch.resize((IMG_WIDTH, IMG_HEIGHT)) 
             img_array = image.img_to_array(img_resized)
+
+            # Ensure the array has the channel dimension, resulting in shape (224, 224, 1)
+            if img_array.ndim == 2:
+                img_array = np.expand_dims(img_array, axis=-1)
+                
+            # Expand dimensions for batch, resulting in shape (1, 224, 224, 1)
             img_array = np.expand_dims(img_array, axis=0)
             img_array /= 255.0
-
-            predictions = model.predict(img_array)
+            
+            # Use original_pil_img (the RGB version) for Telegram logging (to send a color image)
+            
+            predictions = model.predict(img_array) 
             predicted_class_index = np.argmax(predictions[0])
             confidence = float(predictions[0][predicted_class_index])
             predicted_class_name = class_names.get(predicted_class_index, "Unknown")
@@ -366,7 +390,8 @@ def predict_endpoint():
             
             # 4. Send to Telegram
             img_byte_arr = BytesIO()
-            pil_img.save(img_byte_arr, format='JPEG')
+            # IMPORTANT: Use the RGB image for Telegram, not the 1-channel one
+            original_pil_img.save(img_byte_arr, format='JPEG') 
             img_byte_arr.seek(0)
             
             telegram_message = create_telegram_message(
