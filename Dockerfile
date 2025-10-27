@@ -53,12 +53,6 @@ RUN if [ -f "recommendations.json" ]; then \
         echo "⚠️ WARNING: recommendations.json missing in build context."; \
     fi
 
-COPY firebase_service_account.json ./
-RUN if [ -f "firebase_service_account.json" ]; then \
-        echo "✅ firebase_service_account.json copied successfully."; \
-    else \
-        echo "⚠️ WARNING: firebase_service_account.json missing in build context."; \
-    fi
 
 # Recommended TensorFlow environment variables for stability on limited resources
 ENV TF_ENABLE_ONEDNN_OPTS=0
