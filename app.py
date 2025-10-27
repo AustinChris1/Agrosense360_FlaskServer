@@ -314,7 +314,7 @@ def predict_endpoint():
             })
 
             # Check confidence threshold for "Unknown"
-            if confidence < 0.6:
+            if confidence < 0.4:
                 predicted_class_name = "Unknown"
                 recommendations = recommendations_db.get("Unknown", recommendations) 
             
