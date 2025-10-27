@@ -50,17 +50,17 @@ RUN echo "⬇️ Downloading Firebase service account file..." && \
         exit 1; \
     fi
 
-# ✅ Safely copy optional JSON assets
-# Instead of chaining COPY with echo, just do conditional checks in RUN
-COPY class_indices.json ./ || true
-COPY recommendations.json ./ || true
+# Copy your other asset files with safety checks
+COPY class_indices.json ./
 RUN if [ -f "class_indices.json" ]; then \
-        echo "✅ class_indices.json found."; \
+        echo "✅ class_indices.json copied successfully."; \
     else \
         echo "⚠️ WARNING: class_indices.json missing in build context."; \
-    fi && \
-    if [ -f "recommendations.json" ]; then \
-        echo "✅ recommendations.json found."; \
+    fi
+
+COPY recommendations.json ./
+RUN if [ -f "recommendations.json" ]; then \
+        echo "✅ recommendations.json copied successfully."; \
     else \
         echo "⚠️ WARNING: recommendations.json missing in build context."; \
     fi
