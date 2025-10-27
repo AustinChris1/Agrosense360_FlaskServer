@@ -23,7 +23,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY best_agrosense_model.h5 .
 COPY class_indices.json .
 COPY recommendations.json .
-COPY . .
+COPY firebase_service_account.json .
+# COPY . .
 
 # Recommended TensorFlow environment variables for stability on limited resources
 ENV TF_ENABLE_ONEDNN_OPTS=0
@@ -34,4 +35,6 @@ ENV KMP_SETTINGS=1
 # Expose the default Cloud Run port, though the CMD uses $PORT
 EXPOSE 3000 
 
-CMD ["gunicorn", "--bind", "0.0.0.0:3000", "--workers", "1", "--threads", "4", "--timeout", "600", "app:app"]
+COPY . .
+ENV FLASK_APP=app.py
+CMD ["flask", "run", "--host=0.0.0.0", "--port=3000"]
