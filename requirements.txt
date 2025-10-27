@@ -4,7 +4,7 @@ gunicorn==23.0.0
 flask-cors==4.0.1
 
 # --- Core AI / TensorFlow stack ---
-tensorflow==2.20.0        
+tensorflow       
 h5py>=3.11.0
 numpy>=1.26.4
 Pillow>=10.3.0
@@ -13,7 +13,7 @@ opencv-python-headless>=4.10.0.84
 # --- Firebase / Google Services ---
 firebase-admin==6.5.0
 googletrans==4.0.0rc1
-requests>=2.31.0
+requests
 
 # --- Optional: Performance / safety ---
-protobuf<5.28.0
+protobuf
