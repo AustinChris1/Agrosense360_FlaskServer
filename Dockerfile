@@ -38,21 +38,21 @@ RUN echo "⬇️ Downloading model from Google Drive..." && \
         exit 1; \
     fi
 
+# ✅ Download Firebase service account file from Google Drive
+RUN echo "⬇️ Downloading Firebase service account file..." && \
+    FIREBASE_FILE_ID=14Ejyhtvk27B1UTMxrh8OjvtvebgyS51g && \
+    FIREBASE_FILE_NAME=firebase_service_account.json && \
+    wget --no-check-certificate "https://drive.google.com/uc?export=download&id=${FIREBASE_FILE_ID}" -O ${FIREBASE_FILE_NAME} && \
+    if [ -s "${FIREBASE_FILE_NAME}" ]; then \
+        echo "✅ Firebase key downloaded successfully: ${FIREBASE_FILE_NAME}"; \
+    else \
+        echo "❌ ERROR: Firebase key failed to download or is empty!"; \
+        exit 1; \
+    fi
+
 # Copy your other asset files with safety checks
-COPY class_indices.json ./
-RUN if [ -f "class_indices.json" ]; then \
-        echo "✅ class_indices.json copied successfully."; \
-    else \
-        echo "⚠️ WARNING: class_indices.json missing in build context."; \
-    fi
-
-COPY recommendations.json ./
-RUN if [ -f "recommendations.json" ]; then \
-        echo "✅ recommendations.json copied successfully."; \
-    else \
-        echo "⚠️ WARNING: recommendations.json missing in build context."; \
-    fi
-
+COPY class_indices.json ./ || echo "⚠️ WARNING: class_indices.json missing in build context."
+COPY recommendations.json ./ || echo "⚠️ WARNING: recommendations.json missing in build context."
 
 # Recommended TensorFlow environment variables for stability on limited resources
 ENV TF_ENABLE_ONEDNN_OPTS=0

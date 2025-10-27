@@ -12,18 +12,17 @@ import json
 import firebase_admin
 from firebase_admin import credentials, db
 from googletrans import Translator 
-from io import BytesIO 
-from dotenv import load_dotenv
+from io import BytesIO # Needed for image handling
 
 app = Flask(__name__)
 CORS(app) 
-load_dotenv()
+
 # --- Firebase & Telegram Config ---
-FIREBASE_KEY_ENV_VAR = 'FIREBASE_KEY_JSON'
-# --- CORRECT: Read variables from the environment (loaded by load_dotenv()) ---
-FIREBASE_DATABASE_URL = os.environ.get('FIREBASE_DATABASE_URL')
-TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN')
-TELEGRAM_CHAT_ID = os.environ.get('TELEGRAM_CHAT_ID')
+# IMPORTANT: Replace with your actual Firebase and Telegram details
+FIREBASE_SERVICE_ACCOUNT_KEY = 'firebase_service_account.json'
+FIREBASE_DATABASE_URL = 'https://schoolfinderabj-default-rtdb.europe-west1.firebasedatabase.app/' 
+TELEGRAM_BOT_TOKEN = '7678276226:AAGNAWAFYhWIfJ6BWvld6BDki2fVDFWyb90'
+TELEGRAM_CHAT_ID = '1206974757'
 
 # --- Configuration ---
 MODEL_PATH = 'best_agrosense_model.h5'
@@ -48,9 +47,9 @@ LANGUAGE_MAP = {
 
 # Dictionary for multilingual UI text 
 UI_TEXT_MAP = {
-    'Overview': {'en': 'Overview', 'ig': 'Nleleanya' },
-    'Treatment': {'en': 'Treatment', 'ig': 'Ọgwụgwọ' },
-    'Prevention': {'en': 'Prevention', 'ig': 'Mgbochi' },
+    'Overview': { 'en': 'Overview', 'ig': 'Nleleanya' },
+    'Treatment': { 'en': 'Treatment', 'ig': 'Ọgwụgwọ' },
+    'Prevention': { 'en': 'Prevention', 'ig': 'Mgbochi' },
 }
 
 # Global variables to store the loaded model and class names
@@ -87,38 +86,6 @@ class FixedDropout(tf.keras.layers.Dropout):
 def load_resources():
     global model, class_names, recommendations_db
     print("Loading model and resources...")
-    
-    # Initialize Firebase Admin SDK
-    try:
-        # 1. Check if Firebase is already initialized
-        if not firebase_admin._apps:
-            
-            # --- CORRECT: Get the JSON string from the environment variable ---
-            firebase_key_json_str = os.environ.get(FIREBASE_KEY_ENV_VAR)
-            
-            if not firebase_key_json_str or not FIREBASE_DATABASE_URL:
-                print("WARNING: Firebase credentials or database URL not fully set. Database logging will be skipped.")
-                # The function continues to load the model and recommendations
-            else:
-                try:
-                    service_account_info = json.loads(firebase_key_json_str)
-                except json.JSONDecodeError as e:
-                    print(f"CRITICAL ERROR: Failed to parse Firebase service account JSON: {e}")
-                    return
-
-                # Initialize with the dictionary object
-                cred = credentials.Certificate(service_account_info)
-                firebase_admin.initialize_app(cred, {
-                    'databaseURL': FIREBASE_DATABASE_URL
-                })
-                print("Firebase Admin SDK initialized successfully.")
-        else:
-            print("Firebase Admin SDK already initialized.")
-    except Exception as e:
-        # The app shouldn't crash if Firebase fails, only skip logging.
-        print(f"Error initializing Firebase Admin SDK: {e}. Data logging may be unavailable.")
-        
-    # 2. Load the Keras Model
     try:
         if not os.path.exists(MODEL_PATH):
             raise FileNotFoundError(f"Model file not found at: {os.path.abspath(MODEL_PATH)}")
@@ -133,10 +100,8 @@ def load_resources():
         print("Model loaded successfully.")
     except Exception as e:
         print(f"Error loading model: {e}")
-        # CRITICAL: Stop the server if the ML model isn't available
         raise RuntimeError(f"Failed to load model: {e}")
 
-    # 3. Load Class Names
     try:
         with open(CLASS_INDICES_PATH, 'r') as f:
             loaded_indices = json.load(f)
@@ -145,7 +110,6 @@ def load_resources():
     except FileNotFoundError:
         raise RuntimeError(f"Error: {CLASS_INDICES_PATH} not found.")
 
-    # 4. Load Recommendations
     try:
         with open(RECOMMENDATIONS_PATH, 'r') as f:
             recommendations_db = json.load(f)
@@ -153,7 +117,21 @@ def load_resources():
     except FileNotFoundError:
         raise RuntimeError(f"Error: {RECOMMENDATIONS_PATH} not found.")
 
-    # --- REMOVED: Redundant and incorrect second Firebase initialization block ---
+    # Initialize Firebase Admin SDK
+    try:
+        # Check if Firebase has already been initialized (Gunicorn might load the app multiple times)
+        if not firebase_admin._apps:
+            cred = credentials.Certificate(FIREBASE_SERVICE_ACCOUNT_KEY)
+            firebase_admin.initialize_app(cred, {
+                'databaseURL': FIREBASE_DATABASE_URL
+            })
+            print("Firebase Admin SDK initialized successfully.")
+        else:
+            print("Firebase Admin SDK already initialized.")
+    except Exception as e:
+        # Be less aggressive on exit, just log the error and continue if possible.
+        print(f"Error initializing Firebase Admin SDK: {e}. Data logging may be unavailable.")
+        # We don't exit here, as the main app functionality should still work.
 
 # --- Translation Function (Enhanced for multilingual text) ---
 def get_translated_ui_text(key, lang_code, text_map):
@@ -252,9 +230,8 @@ def create_telegram_message(predicted_class, confidence, translated_recommendati
     return message.strip()
 
 def send_telegram_photo(photo_data, message):
-    # --- CORRECTED: Use the global variables which are now read from .env ---
-    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID: 
-        print("WARNING: Telegram bot token or chat ID is missing. Skipping Telegram notification.")
+    if TELEGRAM_BOT_TOKEN == '7678276226:AAGNAWAFYhWIfJ6BWvld6BDki2fVDFWyb90': # Check against the placeholder token you provided
+        print("WARNING: Telegram bot token is likely a placeholder. Skipping Telegram notification.")
         return False
     
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendPhoto"
@@ -296,8 +273,8 @@ def predict_endpoint():
         try:
             # Check if model is loaded before proceeding
             if model is None:
-                return jsonify({"error": "Model not yet loaded. Server is initializing."}), 503
-                
+                 return jsonify({"error": "Model not yet loaded. Server is initializing."}), 503
+                 
             # 1. Image Pre-processing and Prediction
             pil_img = Image.open(file.stream).convert('RGB')
 
@@ -443,7 +420,7 @@ def test_predict_form():
             </div>
             
             <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150 ease-in-out">
-                    Predict Disease
+                Predict Disease
             </button>
         </form>
 
@@ -562,6 +539,9 @@ try:
     with app.app_context():
         load_resources()
     print("Application resources loaded successfully for Gunicorn.")
+# ... (rest of the block)
 except Exception as e:
     # Log the failure but don't call exit(), let Gunicorn's worker management handle it.
-    print(f"CRITICAL ERROR during app startup: {e}")
+    print(f"CRITICAL ERROR during app startup: {e}") 
+
+# Note: The "if __name__ == '__main__':" block has been fully removed.
