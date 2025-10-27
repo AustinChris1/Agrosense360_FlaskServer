@@ -7,6 +7,7 @@ WORKDIR /app
 # Install necessary system dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
+    wget \
     libgl1 \
     libgomp1 \
     libsm6 \
@@ -17,14 +18,47 @@ RUN apt-get update && \
 
 # Copy the requirements file and install dependencies first.
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN if [ -f "requirements.txt" ]; then \
+        echo "✅ requirements.txt found, installing dependencies..."; \
+        pip install --no-cache-dir -r requirements.txt; \
+    else \
+        echo "❌ ERROR: requirements.txt not found. Build cannot continue."; \
+        exit 1; \
+    fi
 
-# CRITICAL: COPY THE MODEL AND ASSET FILES
-COPY best_agrosense_model.h5 .
-COPY class_indices.json .
-COPY recommendations.json .
-COPY firebase_service_account.json .
-# COPY . .
+# ✅ Download model directly from Google Drive
+RUN echo "⬇️ Downloading model from Google Drive..." && \
+    FILE_ID=1xkvaONSV_Y5i4uts6qWYxesaf5LAH7Ll && \
+    FILE_NAME=best_agrosense_model.h5 && \
+    wget --no-check-certificate "https://drive.google.com/uc?export=download&id=${FILE_ID}" -O ${FILE_NAME} && \
+    if [ -s "${FILE_NAME}" ]; then \
+        echo "✅ Model download complete: ${FILE_NAME}"; \
+    else \
+        echo "❌ ERROR: Model file failed to download or is empty!"; \
+        exit 1; \
+    fi
+
+# Copy your other asset files with safety checks
+COPY class_indices.json ./
+RUN if [ -f "class_indices.json" ]; then \
+        echo "✅ class_indices.json copied successfully."; \
+    else \
+        echo "⚠️ WARNING: class_indices.json missing in build context."; \
+    fi
+
+COPY recommendations.json ./
+RUN if [ -f "recommendations.json" ]; then \
+        echo "✅ recommendations.json copied successfully."; \
+    else \
+        echo "⚠️ WARNING: recommendations.json missing in build context."; \
+    fi
+
+COPY firebase_service_account.json ./
+RUN if [ -f "firebase_service_account.json" ]; then \
+        echo "✅ firebase_service_account.json copied successfully."; \
+    else \
+        echo "⚠️ WARNING: firebase_service_account.json missing in build context."; \
+    fi
 
 # Recommended TensorFlow environment variables for stability on limited resources
 ENV TF_ENABLE_ONEDNN_OPTS=0
@@ -32,9 +66,19 @@ ENV OMP_NUM_THREADS=1
 ENV KMP_BLOCKTIME=0
 ENV KMP_SETTINGS=1
 
-# Expose the default Cloud Run port, though the CMD uses $PORT
+# Copy the main app code
+COPY . .
+RUN if [ -f "app.py" ]; then \
+        echo "✅ app.py found and copied successfully."; \
+    else \
+        echo "❌ ERROR: app.py not found in build context. Build cannot continue."; \
+        exit 1; \
+    fi
+
+# Expose the default Cloud Run port
 EXPOSE 3000 
 
-COPY . .
 ENV FLASK_APP=app.py
+
+# Run the Flask server directly (simpler and works well with Cloud Run)
 CMD ["flask", "run", "--host=0.0.0.0", "--port=3000"]
