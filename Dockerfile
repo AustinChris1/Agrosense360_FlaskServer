@@ -32,6 +32,6 @@ ENV KMP_BLOCKTIME=0
 ENV KMP_SETTINGS=1
 
 # Expose the default Cloud Run port, though the CMD uses $PORT
-EXPOSE 8080 
+EXPOSE 3000 
 
-CMD ["gunicorn", "--bind", "0.0.0.0:${PORT}", "--workers", "1", "--threads", "4", "--timeout", "600", "app:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:3000", "--workers", "1", "--threads", "4", "--timeout", "600", "app:app"]
