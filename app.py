@@ -18,10 +18,9 @@ app = Flask(__name__)
 CORS(app) 
 
 # --- Firebase & Telegram Config ---
-# IMPORTANT: Replace with your actual Firebase and Telegram details
 FIREBASE_SERVICE_ACCOUNT_KEY = 'firebase_service_account.json'
 FIREBASE_DATABASE_URL = 'https://schoolfinderabj-default-rtdb.europe-west1.firebasedatabase.app/' 
-TELEGRAM_BOT_TOKEN = '7678276226:AAGNAWAFYhWIfJ6BWvld6BDki2fVDFWyb90'
+TELEGRAM_BOT_TOKEN = '8212102831:AAElaFg8nMiiRAjD0Oo_17KIwQ5lulm7_bQ'
 TELEGRAM_CHAT_ID = '1206974757'
 
 # --- Configuration ---
@@ -87,11 +86,6 @@ def load_resources():
     global model, class_names, recommendations_db
     print("Loading model and resources...")
     try:
-        if not os.path.exists(MODEL_PATH):
-            raise FileNotFoundError(f"Model file not found at: {os.path.abspath(MODEL_PATH)}")
-            
-        model_size_bytes = os.path.getsize(MODEL_PATH)
-        print(f"Model file found. Size: {model_size_bytes / (1024*1024):.2f} MB")
         model = load_model(MODEL_PATH, custom_objects={
             'F1Score': F1Score,
             'swish': tf.keras.activations.swish,
@@ -100,7 +94,7 @@ def load_resources():
         print("Model loaded successfully.")
     except Exception as e:
         print(f"Error loading model: {e}")
-        raise RuntimeError(f"Failed to load model: {e}")
+        exit(1)
 
     try:
         with open(CLASS_INDICES_PATH, 'r') as f:
@@ -108,30 +102,27 @@ def load_resources():
             class_names = {int(k): v for k, v in loaded_indices.items()}
         print("Class names loaded successfully.")
     except FileNotFoundError:
-        raise RuntimeError(f"Error: {CLASS_INDICES_PATH} not found.")
+        print(f"Error: {CLASS_INDICES_PATH} not found.")
+        exit(1)
 
     try:
         with open(RECOMMENDATIONS_PATH, 'r') as f:
             recommendations_db = json.load(f)
         print("Recommendations loaded successfully.")
     except FileNotFoundError:
-        raise RuntimeError(f"Error: {RECOMMENDATIONS_PATH} not found.")
+        print(f"Error: {RECOMMENDATIONS_PATH} not found.")
+        exit(1)
 
     # Initialize Firebase Admin SDK
     try:
-        # Check if Firebase has already been initialized (Gunicorn might load the app multiple times)
-        if not firebase_admin._apps:
-            cred = credentials.Certificate(FIREBASE_SERVICE_ACCOUNT_KEY)
-            firebase_admin.initialize_app(cred, {
-                'databaseURL': FIREBASE_DATABASE_URL
-            })
-            print("Firebase Admin SDK initialized successfully.")
-        else:
-            print("Firebase Admin SDK already initialized.")
+        cred = credentials.Certificate(FIREBASE_SERVICE_ACCOUNT_KEY)
+        firebase_admin.initialize_app(cred, {
+            'databaseURL': FIREBASE_DATABASE_URL
+        })
+        print("Firebase Admin SDK initialized successfully.")
     except Exception as e:
-        # Be less aggressive on exit, just log the error and continue if possible.
-        print(f"Error initializing Firebase Admin SDK: {e}. Data logging may be unavailable.")
-        # We don't exit here, as the main app functionality should still work.
+        print(f"Error initializing Firebase Admin SDK: {e}")
+        exit(1)
 
 # --- Translation Function (Enhanced for multilingual text) ---
 def get_translated_ui_text(key, lang_code, text_map):
@@ -230,8 +221,8 @@ def create_telegram_message(predicted_class, confidence, translated_recommendati
     return message.strip()
 
 def send_telegram_photo(photo_data, message):
-    if TELEGRAM_BOT_TOKEN == '7678276226:AAGNAWAFYhWIfJ6BWvld6BDki2fVDFWyb90': # Check against the placeholder token you provided
-        print("WARNING: Telegram bot token is likely a placeholder. Skipping Telegram notification.")
+    if TELEGRAM_BOT_TOKEN == 'YOUR_TELEGRAM_BOT_TOKEN':
+        print("WARNING: Telegram bot token not set. Skipping Telegram notification.")
         return False
     
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendPhoto"
@@ -271,10 +262,6 @@ def predict_endpoint():
     
     if file:
         try:
-            # Check if model is loaded before proceeding
-            if model is None:
-                 return jsonify({"error": "Model not yet loaded. Server is initializing."}), 503
-                 
             # 1. Image Pre-processing and Prediction
             pil_img = Image.open(file.stream).convert('RGB')
 
@@ -326,13 +313,9 @@ def predict_endpoint():
             }
 
             try:
-                # Ensure the app is initialized before calling db.reference
-                if firebase_admin._apps:
-                    ref = db.reference('/predictions')
-                    ref.push(firebase_data)
-                    print("Data pushed to Firebase successfully.")
-                else:
-                    print("WARNING: Firebase not initialized. Skipping database logging.")
+                ref = db.reference('/predictions')
+                ref.push(firebase_data)
+                print("Data pushed to Firebase successfully.")
             except Exception as e:
                 print(f"Error pushing to Firebase: {e}")
             
@@ -366,11 +349,10 @@ def predict_endpoint():
 # --- Health Check Endpoint (remains the same) ---
 @app.route('/health', methods=['GET'])
 def health_check():
-    # This check now relies on the global variables being set by the resource loader
     if model is not None and class_names is not None and recommendations_db is not None:
         return jsonify({"status": "ok", "message": "Model and resources loaded."}), 200
     else:
-        return jsonify({"status": "error", "message": "Model or resources not loaded. Check startup logs."}), 503
+        return jsonify({"status": "error", "message": "Model or resources not loaded."}), 503
 
 # --- Testing Endpoint with HTML Form (Updated Language Options) ---
 @app.route('/', methods=['GET'])
@@ -481,7 +463,6 @@ def test_predict_form():
             formData.append('file', fileInput.files[0]);
 
             try {
-                // Ensure the fetch URL uses the correct port (3000)
                 const response = await fetch(`/predict?lang=${langSelect.value}`, {
                     method: 'POST',
                     body: formData
