@@ -75,4 +75,4 @@ EXPOSE 3000
 ENV FLASK_APP=app.py
 
 # Run the Flask server directly (simpler and works well with Cloud Run)
-CMD ["flask", "run", "--host=0.0.0.0", "--port=3000"]
+CMD ["sh", "-c", "flask run --host=0.0.0.0 --port=$PORT"]
