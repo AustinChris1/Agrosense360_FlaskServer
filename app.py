@@ -12,7 +12,8 @@ import json
 import firebase_admin
 from firebase_admin import credentials, db
 from googletrans import Translator 
-from io import BytesIO # Needed for image handling
+from io import BytesIO
+import base64 
 
 app = Flask(__name__)
 CORS(app) 
@@ -250,27 +251,52 @@ def send_telegram_photo(photo_data, message):
 # --- Main Prediction Endpoint ---
 @app.route('/predict', methods=['POST'])
 def predict_endpoint():
-    if 'file' not in request.files:
-        return jsonify({"error": "No image file provided."}), 400
-    
-    file = request.files['file']
-    if file.filename == '':
-        return jsonify({"error": "No selected image file."}), 400
-    
-    # Get optional language from query parameters, default to English
     dest_lang = request.args.get('lang', 'en').lower()
-    
-    if file:
+    pil_img = None
+    img_byte_arr = None
+
+    try:
+        # Check if it's JSON from Arduino (Base64)
+        if request.is_json:
+            data = request.get_json()
+            base64_img_str = data.get('file', None)
+            if not base64_img_str:
+                return jsonify({"error": "No 'file' key found in JSON payload (Base64 data missing)."}), 400
+            
+            # Decode Base64 string to bytes
+            image_bytes = base64.b64decode(base64_img_str)
+            img_byte_arr = BytesIO(image_bytes)
+            pil_img = Image.open(img_byte_arr).convert('RGB')
+        
+        # Check if it's a regular file upload (e.g., from the web form)
+        elif 'file' in request.files:
+            file = request.files['file']
+            if file.filename == '':
+                return jsonify({"error": "No selected image file."}), 400
+            
+            # Read the file data into a BytesIO object for re-use (Telegram)
+            img_byte_arr = BytesIO(file.read())
+            img_byte_arr.seek(0) # Reset pointer
+            pil_img = Image.open(img_byte_arr).convert('RGB')
+        
+        else:
+            return jsonify({"error": "Unsupported Media Type or no file provided. Expected JSON (Base64) or multipart/form-data."}), 415
+
+    except Exception as e:
+        # Catch errors like corrupted Base64 or non-image data
+        return jsonify({"error": f"Failed to process image data: {str(e)}"}), 400
+
+    # --- Continue with existing logic using 'pil_img' ---
+    if pil_img:
         try:
             # 1. Image Pre-processing and Prediction
-            pil_img = Image.open(file.stream).convert('RGB')
-
             if is_low_quality_image(pil_img):
                 return jsonify({"error": "Image quality is too low (e.g., too dark, too uniform). Please upload a clearer image."}), 400
             
             if not is_leaf_detected(pil_img):
                 return jsonify({"error": "No significant plant leaf detected in the image. Please upload an image of a plant leaf."}), 400
 
+            # ... (rest of the prediction logic remains the same) ...
             img_resized = pil_img.resize((IMG_WIDTH, IMG_HEIGHT))
             img_array = image.img_to_array(img_resized)
             img_array = np.expand_dims(img_array, axis=0)
@@ -309,7 +335,7 @@ def predict_endpoint():
                 "timestamp": tf.timestamp().numpy().tolist(),
                 "predicted_class": predicted_class_name,
                 "confidence": confidence,
-                "recommendations": translated_recommendations # Contains language code and name
+                "recommendations": translated_recommendations
             }
 
             try:
@@ -319,9 +345,8 @@ def predict_endpoint():
             except Exception as e:
                 print(f"Error pushing to Firebase: {e}")
             
-            # 4. Send to Telegram
-            img_byte_arr = BytesIO()
-            pil_img.save(img_byte_arr, format='JPEG')
+            # 4. Send to Telegram (Reuse the BytesIO object from the start)
+            # Ensure img_byte_arr is reset to the start for sending
             img_byte_arr.seek(0)
             
             telegram_message = create_telegram_message(
@@ -345,7 +370,6 @@ def predict_endpoint():
             return jsonify({"error": f"An internal server error occurred: {str(e)}"}), 500
     
     return jsonify({"error": "Something went wrong."}), 500
-
 # --- Health Check Endpoint (remains the same) ---
 @app.route('/health', methods=['GET'])
 def health_check():
