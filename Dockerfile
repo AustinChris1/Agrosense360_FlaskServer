@@ -50,9 +50,20 @@ RUN echo "⬇️ Downloading Firebase service account file..." && \
         exit 1; \
     fi
 
-# Copy your other asset files with safety checks
-COPY class_indices.json ./ || echo "⚠️ WARNING: class_indices.json missing in build context."
-COPY recommendations.json ./ || echo "⚠️ WARNING: recommendations.json missing in build context."
+# ✅ Safely copy optional JSON assets
+# Instead of chaining COPY with echo, just do conditional checks in RUN
+COPY class_indices.json ./ || true
+COPY recommendations.json ./ || true
+RUN if [ -f "class_indices.json" ]; then \
+        echo "✅ class_indices.json found."; \
+    else \
+        echo "⚠️ WARNING: class_indices.json missing in build context."; \
+    fi && \
+    if [ -f "recommendations.json" ]; then \
+        echo "✅ recommendations.json found."; \
+    else \
+        echo "⚠️ WARNING: recommendations.json missing in build context."; \
+    fi
 
 # Recommended TensorFlow environment variables for stability on limited resources
 ENV TF_ENABLE_ONEDNN_OPTS=0
